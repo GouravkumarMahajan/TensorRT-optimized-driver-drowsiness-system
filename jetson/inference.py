@@ -3,8 +3,10 @@ import tensorrt as trt
 import cv2
 import pycuda.driver as cuda
 import pycuda.autoinit
-
-
+import RPi.GPIO as GPIO
+import time
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(7,GPIO.OUT)
 # Load TensorRT engine and allocate buffers
 TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
 
@@ -92,7 +94,6 @@ while True:
     for (x, y, w, h) in eyes:
         roi_gray = gray[y:y+h, x:x+h]
         roi_color = frame[y:y+h, x:x+h]
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
         eyess = eyes_cascade.detectMultiScale(roi_gray)
         if len(eyess) == 0:
             continue
@@ -114,27 +115,16 @@ while True:
     # Process the output
     predicted_class = (output > 3).astype(int).flatten()
 
-    if (predicted_class == 1):
-
-        x1, y1, w1, h1 = 0, 0, 175, 75
-        cv2.rectangle(frame, (x1, y1), (x1+w1, y1+h1), (0, 0, 0), -1)
-        cv2.putText(frame, "Active", (x1+int(w1/10), y1+int(h1/2)),
-                    cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+    if (predicted_class == 1):    
+        print("driver drowsiness system online")
     else:
         counter = counter+1
         if counter > 10:
-            x1, y1, w1, h1 = 0, 0, 175, 75
-            for i in range(2):
-                cv2.rectangle(frame, (x1, y1), (x1+w1, y1+h1), (0, 0, 0), -1)
-                cv2.putText(frame, "Sleep alert !!! ", (x1+int(w1/10), y1 +
-                            int(h1/2)), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
+            print("Driver is drowsy")
+            GPIO.output(7, GPIO.True)
+            time.sleep(3)
+            GPIO.output(7, GPIO.False)
             counter = 0
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-
-    cv2.imshow("driver drowsiness detection", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
