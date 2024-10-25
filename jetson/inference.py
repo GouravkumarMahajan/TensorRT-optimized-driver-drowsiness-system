@@ -138,12 +138,13 @@ def main():
             predicted_class = (output > 3).astype(int).flatten()
 
             if predicted_class == 1:
-                print("Driver drowsiness system online")
+                print("Driver drowsiness system online: Driver awake")
                 counter = 0
             else:
                 counter += 1
+                print("Driver drowsiness system online: suspecting driver is drowsy")
                 if counter > 0:
-                    print("Driver is drowsy")
+                    print("Driver drowsiness system online: Driver is drowsy")
                     GPIO.output(7, GPIO.HIGH)
                     time.sleep(3)
                     GPIO.output(7, GPIO.LOW)
